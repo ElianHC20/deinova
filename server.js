@@ -11,27 +11,44 @@ app.use(cors({
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
-  }));app.use(express.json());
+}));
+app.use(express.json());
 
 // Configuración de BOLD
 const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
 const BOLD_SECRET_KEY = '4cNUMHXiKd4GL1DlBA9_pg';
 
-// Función para generar fecha de expiración
-function getExpirationDate() {
-    // Obtener timestamp actual en nanosegundos
-    const nowNanoseconds = BigInt(Date.now()) * BigInt(1_000_000);
+// Función para generar firma de suscripción
+function generateSubscriptionSignature(params) {
+    const { 
+        orderId, 
+        amount, 
+        currency, 
+        frequency = 'monthly', 
+        interval = 1, 
+        totalPayments = 0 
+    } = params;
+
+    // Crear cadena para firma incluyendo detalles de suscripción
+    const string = `${orderId}${amount}${currency}${frequency}${interval}${totalPayments}${BOLD_SECRET_KEY}`;
     
-    // Agregar 24 horas en nanosegundos
-    const futureNanoseconds = nowNanoseconds + (BigInt(24) * BigInt(60) * BigInt(60) * BigInt(1_000_000_000));
-    
-    return futureNanoseconds.toString();
+    return crypto
+        .createHash('sha256')
+        .update(string)
+        .digest('hex');
 }
 
-// Endpoint para generar firma de integridad
+// Endpoint para generar firma de integridad para suscripción
 app.post('/generate-signature', (req, res) => {
     try {
-        const { orderId, amount, currency } = req.body;
+        const { 
+            orderId, 
+            amount, 
+            currency,
+            frequency = 'monthly',
+            interval = 1,
+            totalPayments = 0
+        } = req.body;
 
         // Validar parámetros requeridos
         if (!orderId || !amount || !currency) {
@@ -40,31 +57,33 @@ app.post('/generate-signature', (req, res) => {
             });
         }
 
-        // Generar fecha de expiración
-        const expirationDate = getExpirationDate();
+        // Generar firma para suscripción
+        const signature = generateSubscriptionSignature({
+            orderId, 
+            amount, 
+            currency,
+            frequency,
+            interval,
+            totalPayments
+        });
 
-        // Generar cadena para firma
-        const string = `${orderId}${amount}${currency}${BOLD_SECRET_KEY}`;
-        
-        // Generar firma SHA256
-        const signature = crypto
-            .createHash('sha256')
-            .update(string)
-            .digest('hex');
-
-        // Responder con datos necesarios
+        // Responder con datos necesarios para suscripción
         res.json({
             success: true,
             signature,
             apiKey: BOLD_API_KEY,
             orderId,
-            expirationDate
+            subscriptionDetails: {
+                frequency,
+                interval,
+                totalPayments
+            }
         });
 
     } catch (error) {
-        console.error('Error generando firma:', error);
+        console.error('Error generando firma de suscripción:', error);
         res.status(500).json({
-            error: 'Error al generar la firma'
+            error: 'Error al generar la firma para suscripción'
         });
     }
 });
