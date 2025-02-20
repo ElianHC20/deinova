@@ -4,8 +4,14 @@ const cors = require('cors');
 const app = express();
 
 // Middlewares
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+    origin: [
+      'https://cardenascompany.io',
+      'https://cardenascompany.io/apps/DaiNova/index.html'
+    ],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));app.use(express.json());
 
 // Configuración de BOLD
 const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
