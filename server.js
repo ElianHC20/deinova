@@ -6,8 +6,8 @@ const app = express();
 // Middlewares
 app.use(cors({
     origin: [
-      'https://cardenascompany.io',
-      'https://cardenascompany.io/apps/DaiNova/index.html'
+        'https://cardenascompany.io',
+        'https://cardenascompany.io/apps/DaiNova/index.html'
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -19,19 +19,20 @@ const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
 const BOLD_SECRET_KEY = '4cNUMHXiKd4GL1DlBA9_pg';
 
 // Función para generar firma de suscripción
-// Función para generar firma de suscripción
 function generateSubscriptionSignature(params) {
-    const { 
-        orderId, 
-        amount, 
+    const {
+        orderId,
+        amount,
         currency,
+        returnUrl,
+        cancelUrl,
         frequency = 'monthly',
         interval = 1,
-        totalPayments = 0 
+        totalPayments = 0
     } = params;
 
     // Formato específico de Bold para la firma
-    const string = `${orderId}${amount}${currency}${BOLD_SECRET_KEY}`;
+    const string = `${orderId}${amount}${currency}${returnUrl}${cancelUrl}${BOLD_SECRET_KEY}`;
     
     return crypto
         .createHash('sha256')
@@ -42,27 +43,34 @@ function generateSubscriptionSignature(params) {
 // Endpoint para generar firma de integridad para suscripción
 app.post('/generate-signature', (req, res) => {
     try {
-        const { 
-            orderId, 
-            amount, 
+        const {
+            orderId,
+            amount,
             currency,
+            returnUrl,
+            cancelUrl,
             frequency = 'monthly',
             interval = 1,
             totalPayments = 0
         } = req.body;
 
         // Validar parámetros requeridos
-        if (!orderId || !amount || !currency) {
+        if (!orderId || !amount || !currency || !returnUrl || !cancelUrl) {
             return res.status(400).json({
-                error: 'Faltan parámetros requeridos (orderId, amount, currency)'
+                error: 'Faltan parámetros requeridos (orderId, amount, currency, returnUrl, cancelUrl)'
             });
         }
 
         // Generar firma para suscripción
         const signature = generateSubscriptionSignature({
-            orderId, 
-            amount, 
-            currency
+            orderId,
+            amount,
+            currency,
+            returnUrl,
+            cancelUrl,
+            frequency,
+            interval,
+            totalPayments
         });
 
         // Responder con datos necesarios para suscripción
@@ -77,7 +85,6 @@ app.post('/generate-signature', (req, res) => {
                 totalPayments
             }
         });
-
     } catch (error) {
         console.error('Error generando firma de suscripción:', error);
         res.status(500).json({
