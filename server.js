@@ -6,7 +6,6 @@ const app = express();
 // Middlewares
 app.use(cors({
     origin: [
-        'https://cardenascompany.io',
         'https://cardenascompany.io/apps/DaiNova/index.html'
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
