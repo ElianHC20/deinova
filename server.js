@@ -19,18 +19,19 @@ const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
 const BOLD_SECRET_KEY = '4cNUMHXiKd4GL1DlBA9_pg';
 
 // Función para generar firma de suscripción
+// Función para generar firma de suscripción
 function generateSubscriptionSignature(params) {
     const { 
         orderId, 
         amount, 
-        currency, 
-        frequency = 'monthly', 
-        interval = 1, 
+        currency,
+        frequency = 'monthly',
+        interval = 1,
         totalPayments = 0 
     } = params;
 
-    // Crear cadena para firma incluyendo detalles de suscripción
-    const string = `${orderId}${amount}${currency}${frequency}${interval}${totalPayments}${BOLD_SECRET_KEY}`;
+    // Formato específico de Bold para la firma
+    const string = `${orderId}${amount}${currency}${BOLD_SECRET_KEY}`;
     
     return crypto
         .createHash('sha256')
@@ -61,10 +62,7 @@ app.post('/generate-signature', (req, res) => {
         const signature = generateSubscriptionSignature({
             orderId, 
             amount, 
-            currency,
-            frequency,
-            interval,
-            totalPayments
+            currency
         });
 
         // Responder con datos necesarios para suscripción
