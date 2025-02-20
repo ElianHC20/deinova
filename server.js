@@ -18,21 +18,19 @@ app.use(express.json());
 const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
 const BOLD_SECRET_KEY = '4cNUMHXiKd4GL1DlBA9_pg';
 
-// Función para generar firma de suscripción
+// Función para generar firma de suscripción - Versión original que funcionaba
 function generateSubscriptionSignature(params) {
     const {
         orderId,
         amount,
         currency,
-        returnUrl,
-        cancelUrl,
         frequency = 'monthly',
         interval = 1,
         totalPayments = 0
     } = params;
 
-    // Formato específico de Bold para la firma
-    const string = `${orderId}${amount}${currency}${returnUrl}${cancelUrl}${BOLD_SECRET_KEY}`;
+    // Volvemos al formato original que funcionaba
+    const string = `${orderId}${amount}${currency}${BOLD_SECRET_KEY}`;
     
     return crypto
         .createHash('sha256')
@@ -47,17 +45,15 @@ app.post('/generate-signature', (req, res) => {
             orderId,
             amount,
             currency,
-            returnUrl,
-            cancelUrl,
             frequency = 'monthly',
             interval = 1,
             totalPayments = 0
         } = req.body;
 
         // Validar parámetros requeridos
-        if (!orderId || !amount || !currency || !returnUrl || !cancelUrl) {
+        if (!orderId || !amount || !currency) {
             return res.status(400).json({
-                error: 'Faltan parámetros requeridos (orderId, amount, currency, returnUrl, cancelUrl)'
+                error: 'Faltan parámetros requeridos (orderId, amount, currency)'
             });
         }
 
@@ -65,12 +61,7 @@ app.post('/generate-signature', (req, res) => {
         const signature = generateSubscriptionSignature({
             orderId,
             amount,
-            currency,
-            returnUrl,
-            cancelUrl,
-            frequency,
-            interval,
-            totalPayments
+            currency
         });
 
         // Responder con datos necesarios para suscripción
