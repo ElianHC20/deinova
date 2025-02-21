@@ -15,8 +15,8 @@ app.use(cors({
 app.use(express.json());
 
 // Configuración de BOLD
-const BOLD_API_KEY = '925nWXj_cTzt_VGyHGnWPvaDJhKzjdZUBfRtKB5X6OE';
-const BOLD_SECRET_KEY = '4cNUMHXiKd4GL1DlBA9_pg';
+const BOLD_API_KEY = 'RtLcOY8AfZGBRL1HWcc7QNnPbgrJ4S7vwdYlocpBsxM';
+const BOLD_SECRET_KEY = 'NOBTBOWd2DBT44g84EBEQQ';
 
 // Función para generar firma de suscripción - Versión original que funcionaba
 function generateSubscriptionSignature(params) {
